@@ -1,0 +1,142 @@
+// CTwDan.odl : type library source for ActiveX Control project.
+
+// This file will be processed by the Make Type Library (mktyplib) tool to
+// produce the type library (CTwDan.tlb) that will become a resource in
+// CTwDan.ocx.
+
+#include <olectl.h>
+#include <idispids.h>
+
+[ uuid(F30FEB77-DC2A-44B7-A7F0-E473118A34DB), version(1.0),
+  helpfile("CTwDan.hlp"),
+  helpstring("CTwDan ActiveX Control module"),
+  control ]
+library CTWDANLib
+{
+	importlib(STDOLE_TLB);
+	importlib(STDTYPE_TLB);
+
+	//  Primary dispatch interface for CCLcTwDanCtrl
+
+	[ uuid(E52CA87F-0DFE-4FD7-A310-40D842E1A8AF),
+	  helpstring("Dispatch interface for CLcTwDan Control"), hidden ]
+	dispinterface _DCLcTwDan
+	{
+		properties:
+			// NOTE - ClassWizard will maintain property information here.
+			//    Use extreme caution when editing this section.
+			//{{AFX_ODL_PROP(CCLcTwDanCtrl)
+			[id(1)] BSTR SetHospital;
+			[id(2)] BSTR SetTitleName;
+			[id(3)] BSTR SetPatientInfo;
+			[id(4)] BSTR SetPatientRyDate;
+			[id(5)] short SetFS;
+			[id(6)] short SetTS;
+			[id(7)] double SetMinute;
+			[id(8)] BSTR SetCTwDanInfo;
+			[id(9)] BSTR GetCTwDanInfo;
+			[id(10)] short SetTwDanFocus;
+			[id(11)] short SetRyDayBegin;
+			[id(12)] BSTR SetHospitalFontName;
+			[id(13)] short SetHospitalFontSize;
+			[id(14)] BSTR SetTitleNameFontName;
+			[id(15)] short SetTitleNameFontSize;
+			[id(16)] BSTR PrintInfoVer;
+			[id(17)] short SetAftDayDisable;
+			[id(18)] BSTR GetChageList;
+			[id(19)] short SetTipShow;
+			[id(20)] short SetShowBeginDays;
+			//}}AFX_ODL_PROP
+
+		methods:
+			// NOTE - ClassWizard will maintain method information here.
+			//    Use extreme caution when editing this section.
+			//{{AFX_ODL_METHOD(CCLcTwDanCtrl)
+			[id(21)] void PrintInfo();
+			[id(22)] void BefDay();
+			[id(23)] void AftDay();
+			[id(24)] void BefWeek();
+			[id(25)] void AftWeek();
+			[id(26)] void SaveTmpStorage();
+			//}}AFX_ODL_METHOD
+
+			[id(DISPID_ABOUTBOX)] void AboutBox();
+	};
+
+	//  Event dispatch interface for CCLcTwDanCtrl
+
+	[ uuid(509F1CA8-359C-4449-9E7A-D163AC319147),
+	  helpstring("Event interface for CLcTwDan Control") ]
+	dispinterface _DCLcTwDanEvents
+	{
+		properties:
+			//  Event interface has no properties
+
+		methods:
+			// NOTE - ClassWizard will maintain event information here.
+			//    Use extreme caution when editing this section.
+			//{{AFX_ODL_EVENT(CCLcTwDanCtrl)
+			//}}AFX_ODL_EVENT
+	};
+
+	//  Class information for CCLcTwDanCtrl
+
+	[ uuid(C4CBAF0F-BD05-435D-86C5-A78C504EBE8C),
+	  helpstring("CLcTwDan Control"), control ]
+	coclass CLcTwDan
+	{
+		[default] dispinterface _DCLcTwDan;
+		[default, source] dispinterface _DCLcTwDanEvents;
+	};
+
+	//  Primary dispatch interface for CCSsTwDanCtrl
+
+	[ uuid(0E2A89FF-E548-4731-82F3-F4D6CE847375),
+	  helpstring("Dispatch interface for CSsTwDan Control"), hidden ]
+	dispinterface _DCSsTwDan
+	{
+		properties:
+			// NOTE - ClassWizard will maintain property information here.
+			//    Use extreme caution when editing this section.
+			//{{AFX_ODL_PROP(CCSsTwDanCtrl)
+			//}}AFX_ODL_PROP
+
+		methods:
+			// NOTE - ClassWizard will maintain method information here.
+			//    Use extreme caution when editing this section.
+			//{{AFX_ODL_METHOD(CCSsTwDanCtrl)
+			//}}AFX_ODL_METHOD
+
+			[id(DISPID_ABOUTBOX)] void AboutBox();
+	};
+
+	//  Event dispatch interface for CCSsTwDanCtrl
+
+	[ uuid(71F4EF0E-422D-4D65-B58F-3AC6D1487D29),
+	  helpstring("Event interface for CSsTwDan Control") ]
+	dispinterface _DCSsTwDanEvents
+	{
+		properties:
+			//  Event interface has no properties
+
+		methods:
+			// NOTE - ClassWizard will maintain event information here.
+			//    Use extreme caution when editing this section.
+			//{{AFX_ODL_EVENT(CCSsTwDanCtrl)
+			//}}AFX_ODL_EVENT
+	};
+
+	//  Class information for CCSsTwDanCtrl
+
+	[ uuid(712ECD25-6F8A-4D4D-A947-915C3385AABF),
+	  helpstring("CSsTwDan Control"), control ]
+	coclass CSsTwDan
+	{
+		[default] dispinterface _DCSsTwDan;
+		[default, source] dispinterface _DCSsTwDanEvents;
+	};
+
+
+	//{{AFX_APPEND_ODL}}
+	//}}AFX_APPEND_ODL}}
+};
