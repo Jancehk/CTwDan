@@ -17,7 +17,7 @@
 #ifndef _AFX_NO_AFXCMN_SUPPORT
 #include <afxcmn.h>			// MFC support for Windows Common Controls
 #endif // _AFX_NO_AFXCMN_SUPPORT
-
+#pragma warning(disable:4996)
 // Delete the two includes below if you do not wish to use the MFC
 //  database classes
 #include <afxdb.h>			// MFC database classes

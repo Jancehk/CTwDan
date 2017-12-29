@@ -143,7 +143,7 @@ int AnalyzeString::GetZyDayFromTime(CTime m_time1, CTime m_time2,int LogFlg)
 		aaa.Format("Currt:%s\nRyDat:%s\nTime:%d",time1.Format("%Y-%m-%d %H:%M:%S"),time2.Format("%Y-%m-%d %H:%M:%S"),times1);
 		goto ERR_EXIT;
 	}
-	return times1.GetDays();
+	return (int)times1.GetDays();
 ERR_EXIT:
 	if (0 == LogFlg)
 	{
@@ -568,7 +568,7 @@ int AnalyzeString::SetCurrentDay(char **strIn, char **strOut,void ** pstuLcTwDan
 	FindBegPos = *strIn;
 	FindEndPos = *strOut;	
 	memcpy(m_ryDate, FindBegPos,FindEndPos - FindBegPos);
-	m_ryDate[CTWNDAN_MAX_DATE*2]=0;
+	m_ryDate[CTWNDAN_MAX_DATE*2-1]=0;
 	m_CtwDanInfo = (pCTWLCDANINFO)GetCurrentData(m_ryDate,nRet);
 	if (NULL == m_CtwDanInfo)
 	{
