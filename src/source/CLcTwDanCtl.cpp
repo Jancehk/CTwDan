@@ -6,6 +6,7 @@
 #include "../include/CLcTwDanPpg.h"
 #include "../Include/TwDanCommFun.h"
 #include "../Include/BalloonTip.h"
+#include "../include/TwDanCDC.h"
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
@@ -162,7 +163,7 @@ BOOL CCLcTwDanCtrl::CCLcTwDanCtrlFactory::UpdateRegistry(BOOL bRegister)
 		return AfxOleUnregisterClass(m_clsid, m_lpszProgID);
 }
 
-static CTWDANMANAGE g_CtwnDanManage;
+CTWDANMANAGE g_CtwnDanManage;
 /////////////////////////////////////////////////////////////////////////////
 // CCLcTwDanCtrl::CCLcTwDanCtrl - Constructor
 
@@ -171,7 +172,7 @@ CCLcTwDanCtrl::CCLcTwDanCtrl()
 	InitializeIIDs(&IID_DCLcTwDan, &IID_DCLcTwDanEvents);
 	m_ScreenSize	=CRect(0,0,SCREEN_WIGTH,SCREEN_HIGHT);
 	SetHospitalFontName = _T("华文行楷");
-	m_SetHospitalFontSize = 28;
+	m_SetHospitalFontSize = 26;
 	m_SetHospital	= _T("医院名称");
 	m_SetTitleName	=_T("电子体温单");
 	PrintInfoVer = _T("ddddddddddddddddddd");
@@ -185,6 +186,7 @@ CCLcTwDanCtrl::CCLcTwDanCtrl()
 	m_setRyDayBegin =0;
 	m_SetAftDayDisable =3;
 	flg = true;
+	m_SetTipShow = 0;
 	m_AnlStr.SetParementValue(this);
 	// TODO: Initialize your control's instance data here.
 }
@@ -216,8 +218,11 @@ CCLcTwDanCtrl::~CCLcTwDanCtrl()
 void CCLcTwDanCtrl::OnDraw(
 			CDC* pdc, const CRect& rcBounds, const CRect& rcInvalid)
 {
+	//SetControlSize(m_ScreenSize.Width(), m_ScreenSize.Height());
 	//::SetWindowPos(GetSafeHwnd() , HWND_TOPMOST ,  1 ,1 , 100 , 200, SWP_NOSIZE );
 	pdc->FillRect(rcBounds, CBrush::FromHandle((HBRUSH)GetStockObject(WHITE_BRUSH)));
+	//m_ScreenSize = rcBounds;
+	g_CtwnDanManage.bIsPrint = CTWDAN_SELF;
 	OnPrintInfo(pdc,rcBounds);
 //	pdc->Ellipse(rcBounds);
 }
@@ -261,105 +266,61 @@ void CCLcTwDanCtrl::AboutBox()
 
 void CCLcTwDanCtrl::OnPrintInfo(CDC *pdc,CRect rcBounds)
 {
-	CFont font, *oldfont;
-	LOGFONT lf; 
+	CFont font;// *oldfont;
+	//LOGFONT lf;
 	float	m_printLevel;
 	CPoint point;
+	CTwDanCDC pTwDandc;
 	CRect DrawRect,tempRect;
 	CPen pen(12,2,RGB(0,0,0));
-	int m_LevHigh=0;
-	int m_LevWith=0;
+	//int m_LevHigh=0;
+	//int m_LevWith=0;
 	int m_index=0;
 	int tt = 0;
 	int m_indextemp1=0;
 	int m_indextemp2=0;
 	//	GetWindowRect(clientRect);
+	pTwDandc.Attach(pdc);
 	m_indextemp2 = sizeof(CTWLCDANINFO);
-	g_CtwnDanManage.m_printLevel = m_printLevel = (float)rcBounds.Width()/m_ScreenSize.Width();
-	if (CTWDAN_INIT != g_CtwnDanManage.bIsPrint)
+	//g_CtwnDanManage.m_printLevel = m_printLevel = (float)rcBounds.Width()/m_ScreenSize.Width();
+	if (CTWDAN_INIT == g_CtwnDanManage.bIsPrint)
 	{
 		return;
 	}
 	/************************************************************************/
 	/* 画出体温单的界面                                                    */
 	/************************************************************************/
-	if (1.0==m_printLevel)
-	{
-		g_CtwnDanManage.bIsPrint = CTWDAN_SELF;
-		m_LevHigh=1;
-		m_LevWith=1;
-	}
-	else if (1.0 > m_printLevel)
+	pTwDandc.SetRect(rcBounds, m_ScreenSize);
+	m_printLevel = pTwDandc.GetLevel();
+	if (1.0 > m_printLevel)
 	{
 //		MessageBox(_T("位置不对"),_T("警告"),MB_ICONSTOP);
+		return;
 	}
-	else
-	{
-		g_CtwnDanManage.bIsPrint = CTWDAN_PRINT;
-		m_printLevel=float(m_printLevel-0.2);
-		m_LevHigh =(int)(rcBounds.Height() - m_ScreenSize.Height()*m_printLevel)/2;
-		m_LevWith =(int)(rcBounds.Width() - m_ScreenSize.Width()*m_printLevel )/2;
-	}
+	DrawRect = pTwDandc.GetDrawRect();
 	g_CtwnDanManage.penRed.DeleteObject();
 	g_CtwnDanManage.penRed.CreatePen(PS_SOLID,GetResult(2,m_printLevel),RGB(0,0,255));  //粗红笔
 	g_CtwnDanManage.penBule.DeleteObject();
 	g_CtwnDanManage.penBule.CreatePen(PS_SOLID,GetResult(2,m_printLevel),RGB(0,0,0));  //粗红笔
 	g_CtwnDanManage.penDot.DeleteObject();
 	g_CtwnDanManage.penDot.CreatePen(PS_DASH,GetResult(1,m_printLevel*1.8),RGB(255,0,0));  //粗红笔
-	
-//	MessageBox(_T("1111111111111位置不对"),_T("警告"),MB_ICONSTOP);
+	/*
 	DrawRect.left = rcBounds.left + m_LevWith;
 	DrawRect.top  = rcBounds.top +m_LevHigh;
 	DrawRect.right = rcBounds.right - m_LevWith;
-	DrawRect.bottom = rcBounds.bottom -m_LevHigh;
-	if (m_printLevel<1)
-	{
-		return;
-	}
-	g_CtwnDanManage.Bounds = DrawRect;
-	g_CtwnDanManage.SizeLeve = m_printLevel;
-	pdc->SelectObject(&pen);
-	pdc->Rectangle(&DrawRect);  //描述一个矩形框
-	//set hospital name
-	font.CreateFont(-MulDiv(m_SetHospitalFontSize,-pdc->GetDeviceCaps(LOGPIXELSY),72),
-		0,0,0,FW_NORMAL,0,0,0,GB2312_CHARSET,
-		OUT_STROKE_PRECIS,CLIP_STROKE_PRECIS,DRAFT_QUALITY,
-		VARIABLE_PITCH|FF_SWISS,SetHospitalFontName);
-	oldfont=pdc->SelectObject(&font);
+	DrawRect.bottom = rcBounds.bottom -m_LevHigh;*/
+	//g_CtwnDanManage.Bounds = DrawRect;
+	//g_CtwnDanManage.SizeLeve = m_printLevel;
+
+	pTwDandc.PrintHospitalName(m_SetHospital, SetHospitalFontName, m_SetHospitalFontSize);
+	
+
+	//set little title name
+	pTwDandc.PrintHospitalTitle(m_SetTitleName, _T("宋体"), 15);
 
 	pen.DeleteObject();
-	pen.CreatePen(12,1,RGB(0,0,0));    //细黑笔
+	pen.CreatePen(12, 1, RGB(0, 0, 0));    //细黑笔
 	pdc->SelectObject(&pen);
-	tempRect=DrawRect;
-	tempRect.InflateRect(0,-GetResult(5,m_printLevel),0,0);
-	pdc->DrawText(m_SetHospital,&tempRect,DT_CENTER|DT_TOP|DT_SINGLELINE);
-	pdc->SelectObject(oldfont);
-	font.DeleteObject();
-	
-	//set little title name
-	/*
-	font.CreateFont(-MulDiv(15,-pdc->GetDeviceCaps(LOGPIXELSY),72),
-		0,0,0,FW_NORMAL,0,0,0,GB2312_CHARSET,
-		OUT_STROKE_PRECIS,CLIP_STROKE_PRECIS,DRAFT_QUALITY,
-		VARIABLE_PITCH|FF_SWISS,_T("宋体"));
-	*/
-
-	lf.lfWeight = 12; //字体磅数=10
-	lf.lfHeight = 24; //字体高度(旋转后的字体宽度)=56
-	lf.lfWidth = 12; //字体宽度(旋转后的字体高度)=20
-	lf.lfUnderline = FALSE; //无下划线
-	lf.lfStrikeOut = FALSE; //无删除线
-	lf.lfItalic = FALSE; //非斜体
-	lf.lfEscapement = 00; //字体显示角度=270°
-	lf.lfCharSet = GB2312_CHARSET; //使用缺省字符集
-	strcpy(lf.lfFaceName, _T("宋体"));
-	font.CreateFontIndirect(&lf); 
-	oldfont=pdc->SelectObject(&font);
-	tempRect.top=DrawRect.top+GetResult(42,m_printLevel);
-	pdc->DrawText(m_SetTitleName,&tempRect,DT_CENTER|DT_TOP|DT_SINGLELINE);
-//	tempRect.InflateRect(0,-5,0,0);
-	pdc->SelectObject(oldfont);
-	font.DeleteObject();
 //	ShowLine();
 	g_CtwnDanManage.NeiBounds.left   = DrawRect.left+GetResult(80,m_printLevel);
 	g_CtwnDanManage.NeiBounds.right   = DrawRect.right;
@@ -469,104 +430,46 @@ void CCLcTwDanCtrl::OnPrintInfo(CDC *pdc,CRect rcBounds)
 		pdc->LineTo(m_indextemp2,tt);
 	}
 	
-	pdc->SelectObject(oldfont);
-	font.DeleteObject();
-
 	/************************************************************************/
 	/*  左侧篮筐内容                        */
 	/************************************************************************/
-	font.DeleteObject();//FW_NORMAL
-	/*font.CreateFont(-MulDiv(7, -pdc->GetDeviceCaps(LOGPIXELSY), 85), 0, 0, 0,
-		FW_THIN,0,0,0,
-		GB2312_CHARSET,
-		OUT_STROKE_PRECIS,
-		CLIP_STROKE_PRECIS,
-		DRAFT_QUALITY,
-		VARIABLE_PITCH|FF_SWISS,
-		_T("宋体"));
-		*/
-	lf.lfWeight = 12; //字体磅数=10
-	lf.lfHeight = 15; //字体高度(旋转后的字体宽度)=56
-	lf.lfWidth = 8; //字体宽度(旋转后的字体高度)=20
-	lf.lfUnderline = FALSE; //无下划线
-	lf.lfStrikeOut = FALSE; //无删除线
-	lf.lfItalic = FALSE; //非斜体
-	lf.lfEscapement = 00; //字体显示角度=270°
-	lf.lfCharSet = GB2312_CHARSET; //使用缺省字符集
-	strcpy(lf.lfFaceName, _T("宋体"));
-	font.CreateFontIndirect(&lf); //创建逻辑字体
-	pdc->SelectObject(&font);
-	
-	pen.DeleteObject();
-	pen.CreatePen(PS_SOLID,1,RGB(255,0,0));
-	pdc->SelectObject(&pen);
-	
-	m_index=DrawRect.left+GetResult(8,m_printLevel);
-	pdc->TextOut(m_index,DrawRect.top+GetResult(83,m_printLevel),_T("入院日期:"));
-	pdc->TextOut(m_index,DrawRect.top+GetResult(103,m_printLevel),_T("住院天数:"));
-	pdc->TextOut(m_index,DrawRect.top+GetResult(603,m_printLevel),_T("大便次数:"));
-	pdc->TextOut(m_index,DrawRect.top+GetResult(623,m_printLevel),_T("输入液量:"));
-	pdc->TextOut(m_index,DrawRect.top+GetResult(643,m_printLevel),_T("尿量(ml):"));
-	pdc->TextOut(m_index,DrawRect.top+GetResult(663,m_printLevel),_T("痰量(ml):"));
-	//pdc->TextOut(m_index,DrawRect.top+GetResult(683,m_printLevel),_T("高/低压:"));
-	pdc->TextOut(m_index,DrawRect.top+GetResult(700,m_printLevel),_T("体重(kg):"));
 
-	m_index = DrawRect.left + GetResult(8, m_printLevel);
-	pdc->TextOut(m_index, DrawRect.top + GetResult(159, m_printLevel), _T("脉搏 体温"));
-	pdc->TextOut(m_index, DrawRect.top + GetResult(179, m_printLevel), _T("180  42℃"));
-	pdc->TextOut(m_index, DrawRect.top + GetResult(229, m_printLevel), _T("160  41℃"));
-	pdc->TextOut(m_index, DrawRect.top + GetResult(279, m_printLevel), _T("140  40℃"));
-	pdc->TextOut(m_index, DrawRect.top + GetResult(328, m_printLevel), _T("120  39℃"));
-	pdc->TextOut(m_index, DrawRect.top + GetResult(379, m_printLevel), _T("100  38℃"));
-	pdc->TextOut(m_index, DrawRect.top + GetResult(429, m_printLevel), _T(" 80  37℃"));
-	pdc->TextOut(m_index, DrawRect.top + GetResult(479, m_printLevel), _T(" 60  36℃"));
-	pdc->TextOut(m_index, DrawRect.top + GetResult(529, m_printLevel), _T(" 40  35℃"));
-	pdc->TextOut(m_index, DrawRect.top + GetResult(570, m_printLevel), _T(" 20  34℃"));
+	pTwDandc.SelectPen(1, RGB(255, 0, 0), PS_SOLID);
+	pTwDandc.SelectFont(_T("宋体"), 9);
+	pTwDandc.PrintHeadName(8, 82,   _T("入院日期:"));
+
+	pTwDandc.PrintHeadName(8, 102, _T("住院天数:"));
+	pTwDandc.PrintHeadName(8, 603, _T("大便次数:"));
+	pTwDandc.PrintHeadName(8, 623, _T("输入液量:"));
+	//pTwDandc.PrintHeadName(8, 643, _T("尿量(次/ml):"));
+	pTwDandc.PrintHeadName(8, 663, _T("痰量(ml):"));
+	//pTwDandc.PrintHeadName(8,683,_T("高/低压:"));
+	pTwDandc.PrintHeadName(8, 700, _T("体重(kg):"));
+
+	pTwDandc.PrintHeadName(8, 159, _T("脉搏 体温"));
+	pTwDandc.SelectFont(_T("宋体"), 8);
+	pTwDandc.PrintHeadName(5, 179,  _T("180   42℃"));
+	pTwDandc.PrintHeadName(5, 229,  _T("160   41℃"));
+	pTwDandc.PrintHeadName(5, 279,  _T("140   40℃"));
+	pTwDandc.PrintHeadName(5, 328,  _T("120   39℃"));
+	pTwDandc.PrintHeadName(5, 379,  _T("100   38℃"));
+	pTwDandc.PrintHeadName(5, 429,  _T(" 80   37℃"));
+	pTwDandc.PrintHeadName(5, 479,  _T(" 60   36℃"));
+	pTwDandc.PrintHeadName(5, 529,  _T(" 40   35℃"));
+	pTwDandc.PrintHeadName(5, 570,  _T(" 20   34℃"));
 
 	/***/
-	font.DeleteObject();
-	/*
-	font.CreateFont(-MulDiv(7,-pdc->GetDeviceCaps(LOGPIXELSY),55),
-		0,0,0,FW_NORMAL,0,0,0,GB2312_CHARSET,
-		OUT_STROKE_PRECIS,CLIP_STROKE_PRECIS,DRAFT_QUALITY,
-		VARIABLE_PITCH|FF_SWISS,_T("宋体"));
-		*/
-	lf.lfWeight = 12; //字体磅数=10
-	lf.lfHeight = 14; //字体高度(旋转后的字体宽度)=56
-	lf.lfWidth = 6; //字体宽度(旋转后的字体高度)=20
-	font.CreateFontIndirect(&lf); //创建逻辑字体
-	pdc->SelectObject(&font);
-	pdc->TextOut(m_index,DrawRect.top+GetResult(63,m_printLevel),m_SetPatientInfo);
-	pdc->TextOut(m_index,DrawRect.top+GetResult(683,m_printLevel),_T("舒张/收缩压:"));
-	
-	/*****/
+	pTwDandc.PrintHeadName(16, 141, _T("时间:"));
+	pTwDandc.PrintHeadName(20, 587, _T("呼吸:"));
 
+	pTwDandc.SelectFont(_T("宋体"), 7,73);
+	pTwDandc.PrintHeadName(5, 63, m_SetPatientInfo);
+	pTwDandc.PrintHeadName(5, 683, _T("舒张/收缩压:"));
+	pTwDandc.PrintHeadName(5, 123, _T("术/产后天数:"));
+	pTwDandc.PrintHeadName(5, 643, _T("尿量(次/ml):"));
 
-	font.DeleteObject();
-	/*
-	font.CreateFont(-MulDiv(9,-pdc->GetDeviceCaps(LOGPIXELSY),70),
-		0,0,0,FW_NORMAL,0,0,0,GB2312_CHARSET,
-		OUT_STROKE_PRECIS,CLIP_STROKE_PRECIS,DRAFT_QUALITY,
-		VARIABLE_PITCH|FF_SWISS,_T("宋体"));
-		*/
-	lf.lfWeight = 12; //字体磅数=10
-	lf.lfHeight = 14; //字体高度(旋转后的字体宽度)=56
-	lf.lfWidth = 6; //字体宽度(旋转后的字体高度)=20
-	font.CreateFontIndirect(&lf); //创建逻辑字体
-
-	pdc->SelectObject(&font);
-	
-	pdc->TextOut(DrawRect.left+GetResult(7,m_printLevel),DrawRect.top+GetResult(121,m_printLevel),_T("术/产后天数:"));
-	pdc->TextOut(DrawRect.left+GetResult(15,m_printLevel),DrawRect.top+GetResult(139,m_printLevel),_T("时间:"));
-	pdc->TextOut(DrawRect.left+GetResult(20,m_printLevel),DrawRect.top+GetResult(587,m_printLevel),_T("呼吸:"));
-	m_index=GetResult(42,m_printLevel);
-	m_indextemp1=DrawRect.top+GetResult(141,m_printLevel);
-	for (int timea=DrawRect.left+GetResult(84,m_printLevel)+1;timea<DrawRect.right-1;timea+=m_index)
-	{
-		pdc->TextOut(timea+2,m_indextemp1,_T("4"));
-		pdc->TextOut(timea+GetResult(14,m_printLevel),m_indextemp1,_T("8"));
-		pdc->TextOut(timea-4+GetResult(28,m_printLevel),m_indextemp1,_T("12"));
-	}
+	pTwDandc.PrintTitleName();
+	g_CtwnDanManage.pTwDandc = &pTwDandc;
 	g_CtwnDanManage.pdc = pdc;
 	g_CtwnDanManage.twpointFrom.x=g_CtwnDanManage.twpointFrom.y =0;
 	g_CtwnDanManage.mbpointFrom.x=g_CtwnDanManage.mbpointFrom.y=0;
@@ -653,7 +556,7 @@ void CCLcTwDanCtrl::OnPrintLogInfo(CDC *pdc,CRect rcBounds)
 	m_point2.x = tempRect.right;
 	tempRect.left = m_point2.x+GetResult(lengs2,m_printLevel);
 	tempRect.right = tempRect.left+GetResult(lengs,m_printLevel);
-	m_szPagInfo.Format("第%d周/共%d周", GetPageInfo(2), GetPageInfo(1));
+	m_szPagInfo.Format(_T("第%d周/共%d周"), GetPageInfo(2), GetPageInfo(1));
 	if (!m_szPagInfo.IsEmpty())
 	{
 		pdc->DrawText(m_szPagInfo,&tempRect,DT_CENTER|DT_TOP|DT_SINGLELINE);
@@ -671,7 +574,8 @@ void CCLcTwDanCtrl::OnPrintLogInfo(CDC *pdc,CRect rcBounds)
 
 void CCLcTwDanCtrl::OnSize(UINT nType, int cx, int cy) 
 {
-	SetInitialSize(m_ScreenSize.Width(),m_ScreenSize.Height());
+	//SetControlSize(m_ScreenSize.Width(), m_ScreenSize.Height());
+	SetInitialSize(m_ScreenSize.Width(), m_ScreenSize.Height());
 	COleControl::OnSize(nType, cx, cy);
 	// TODO: Add your message handler code here
 	
@@ -897,7 +801,8 @@ void CCLcTwDanCtrl::OnChar(UINT nChar, UINT nRepCnt, UINT nFlags)
 	CRect temrect;
 	static char  strRecv[2]={0};
 	static char  nRecv=0;
-
+#if 0
+#endif
 	DLLPrintLog("Recv:[%x]-%c:%d:%d", nChar, nChar, nRepCnt, nFlags);
 //	strcpy(strRecvTmp,"你");
 	flg = true;
@@ -1026,7 +931,7 @@ PRINTTEXT:
 	SetCaretPos(pt);
 	dc.TextOut(m_nowpoint.x,m_nowpoint.y,g_CtwnDanManage.InputChar.RetRes());
 	dc.SelectObject(pOldFont);
-	dc.DeleteDC();
+	//dc.DeleteDC();
 	COleControl::OnChar(nChar, nRepCnt, nFlags);
 }
 
@@ -1191,6 +1096,7 @@ void CCLcTwDanCtrl::PrintInfo()
 	//memDC.SetMapMode(dc.GetMapMode());
 	printDC.SetStretchBltMode(HALFTONE);
 	printDC.SetMapMode(MM_TEXT);
+	g_CtwnDanManage.bIsPrint = CTWDAN_PRINT;
 	OnPrintInfo(&printDC,rect);
 	printDC.SetTextColor(RGB(0,0,0));
 	OnPrintLogInfo(&printDC, rect);
@@ -1215,7 +1121,7 @@ void CCLcTwDanCtrl::CtwDanMemSet()
 int CCLcTwDanCtrl::GetCurrentDay()
 {
 	CTime tis=CTime::GetCurrentTime();
-	return GetBeginDay(tis.Format("%Y-%m-%d").GetBuffer(0));
+	return GetBeginDay(tis.Format(_T("%Y-%m-%d")).GetBuffer(0));
 }
 
 CString CCLcTwDanCtrl::GetZyDayFromInt(int tt, int zt)
@@ -1228,45 +1134,25 @@ CString CCLcTwDanCtrl::GetZyDayFromInt(int tt, int zt)
 void CCLcTwDanCtrl::ShowValueInfo()
 {
 	int index =0,pp=0,leftvalue=0;
+	int leftsize = 84;
 	CFont font, minfont;
-	LOGFONT lf;
-	CDC *pdc = NULL;
+	CTwDanCDC *pTwDandc = NULL;
 	CFont *pOldFont=NULL;
 	CString m_strLine;
 	CRect tempRect(0,0,84,20);
 	CTWLCDANINFO_T *pstuLcTwDan=NULL;
 	CRect *rcBounds= NULL;
 	float m_printLevel = g_CtwnDanManage.SizeLeve;
-	pdc = g_CtwnDanManage.pdc;
-	if (NULL == pdc)
+	pTwDandc = (CTwDanCDC*)g_CtwnDanManage.pTwDandc;
+	if (NULL == pTwDandc)
 	{
 		return;
 	}
 	rcBounds = &g_CtwnDanManage.Bounds;
-
-	font.DeleteObject();//FW_NORMAL
-	lf.lfWeight = 12; //字体磅数=10
-	lf.lfHeight = 15; //字体高度(旋转后的字体宽度)=56
-	lf.lfWidth = 8; //字体宽度(旋转后的字体高度)=20
-	lf.lfUnderline = FALSE; //无下划线
-	lf.lfStrikeOut = FALSE; //无删除线
-	lf.lfItalic = FALSE; //非斜体
-	lf.lfEscapement = 00; //字体显示角度=270°
-	lf.lfCharSet = GB2312_CHARSET; //使用缺省字符集
-	strcpy(lf.lfFaceName, _T("宋体"));
-	font.CreateFontIndirect(&lf); //创建逻辑字体
-	//font.CreatePointFont((int)(100*m_printLevel),_T("宋体"),NULL);
-	minfont.DeleteObject();
-	lf.lfWeight = 10; //字体磅数=10
-	lf.lfHeight = 12; //字体高度(旋转后的字体宽度)=56
-	lf.lfWidth = 5; //字体宽度(旋转后的字体高度)=20
-	minfont.CreateFontIndirect(&lf); //创建逻辑字体
-	//minfont.CreatePointFont(GetResult(75,m_printLevel),_T("宋体"),NULL);
-	//	leftvalue = rcBounds->left+GetResult(84,m_printLevel);
 	leftvalue = g_CtwnDanManage.NeiBounds.left;
 	for (index=0;index<PAGE_SUM;index++)
 	{
-		pOldFont=pdc->SelectObject(&font);
+		pTwDandc->SelectFont(_T("宋体"), 9);
 		pstuLcTwDan = &g_CtwnDanManage.stuLcTwDan[index];
 /*		pstuLcTwDan->m_shittime=pstuLcTwDan->m_shittime.Left(2);
 		pstuLcTwDan->m_infuse=pstuLcTwDan->m_infuse.Left(4);
@@ -1274,78 +1160,57 @@ void CCLcTwDanCtrl::ShowValueInfo()
 		pstuLcTwDan->m_bpress=pstuLcTwDan->m_bpress.Left(6);
 		pstuLcTwDan->m_weight=pstuLcTwDan->m_weight.Left(4);
 */
-		tempRect.left =leftvalue+GetResult(4,m_printLevel);
-		tempRect.left += GetResult(84,m_printLevel)*index;
-		tempRect.top=rcBounds->top+GetResult(82,m_printLevel);
 		if (0 != pstuLcTwDan->m_ryDate[0])
 		{
-			pdc->TextOut(tempRect.left,tempRect.top,GetSpace(pstuLcTwDan->m_ryDate));
+			pTwDandc->PrintHeadData(leftsize, 82, GetSpace(pstuLcTwDan->m_ryDate), index);
 		}
 		
-		tempRect.top=rcBounds->top+GetResult(102,m_printLevel);
 		if (0 != pstuLcTwDan->m_zyday[0])
 		{
-			pdc->TextOut(tempRect.left,tempRect.top,GetSpace(pstuLcTwDan->m_zyday));
+			pTwDandc->PrintHeadData(leftsize, 102, GetSpace(pstuLcTwDan->m_zyday), index);
 		}
-		tempRect.top=rcBounds->top+GetResult(121,m_printLevel);
-		pdc->TextOut(tempRect.left,tempRect.top,GetSpace(GetSsFmDay(pstuLcTwDan->m_ssday,pstuLcTwDan->m_fmday)));
-		tempRect.top=rcBounds->top+GetResult(603,m_printLevel);
+		pTwDandc->PrintHeadData(leftsize, 121, GetSpace(GetSsFmDay(pstuLcTwDan->m_ssday, pstuLcTwDan->m_fmday)), index);
 		if (0 != pstuLcTwDan->m_shitti[0])
 		{
-			pdc->TextOut(tempRect.left,tempRect.top,GetSpace(pstuLcTwDan->m_shitti));
+			pTwDandc->PrintHeadData(leftsize, 603, GetSpace(pstuLcTwDan->m_shitti), index);
 		}
-		tempRect.top=rcBounds->top+GetResult(623,m_printLevel);
 		if (0 != pstuLcTwDan->m_infuse[0])
 		{
-			pdc->TextOut(tempRect.left,tempRect.top,GetSpace(pstuLcTwDan->m_infuse));
+			pTwDandc->PrintHeadData(leftsize, 623, GetSpace(pstuLcTwDan->m_infuse), index);
 		}
-		tempRect.top=rcBounds->top+GetResult(643,m_printLevel);
 		if (0 != pstuLcTwDan->m_urines[0])
 		{
-			pdc->TextOut(tempRect.left,tempRect.top,GetSpace(pstuLcTwDan->m_urines));
+			pTwDandc->PrintHeadData(leftsize, 643, GetSpace(pstuLcTwDan->m_urines), index);
 		}
-		tempRect.top=rcBounds->top+GetResult(663,m_printLevel);
 		if (0 != pstuLcTwDan->m_sputum[0])
 		{
-			pdc->TextOut(tempRect.left,tempRect.top,GetSpace(pstuLcTwDan->m_sputum));
+			pTwDandc->PrintHeadData(leftsize, 663, GetSpace(pstuLcTwDan->m_sputum), index);
 		}
-		tempRect.top=rcBounds->top+GetResult(703,m_printLevel);
 		if (0 != pstuLcTwDan->m_weight[0])
 		{
-			pdc->TextOut(tempRect.left,tempRect.top,GetSpace(pstuLcTwDan->m_weight));
+			pTwDandc->PrintHeadData(leftsize, 701, GetSpace(pstuLcTwDan->m_weight), index);
 		}
 		
-//		tempRect.left+=GetResult(84,m_printLevel);
-		
-		pdc->SelectObject(&minfont);
+//		tempRect.left+=GetResult(leftsize,m_printLevel);
+
+		pTwDandc->SelectFont(_T("宋体"), 7);
 		/**add press 2 info begin ***/
-		tempRect.top=rcBounds->top+GetResult(684,m_printLevel);
 		if (0 != pstuLcTwDan->m_bpress[0])
 		{
-			pdc->TextOut(tempRect.left,tempRect.top,GetSpace2(pstuLcTwDan->m_bpress));
+			pTwDandc->PrintHeadData(leftsize, 684, GetSpace(pstuLcTwDan->m_bpress), index);
 		}
 		if (0 != pstuLcTwDan->m_bpress2[0])
 		{
-			pdc->TextOut(tempRect.left+GetResult(43,m_printLevel),tempRect.top,GetSpace2(pstuLcTwDan->m_bpress2));
+			pTwDandc->PrintHeadData(leftsize, 684, GetSpace2(pstuLcTwDan->m_bpress2), index);
 		}
-		/**add press 2 info end ***/
-		if (1.00 == m_printLevel)
-		{
-			tempRect.top=rcBounds->top+GetResult(586,m_printLevel);
-		}
-		else
-		{
-			tempRect.top=rcBounds->top+GetResult(587,m_printLevel);
-		}
-		tempRect.left -=GetResult(1,m_printLevel);
-//		tempRect.left = rcBounds->left+GetResult(84,m_printLevel);
+//		tempRect.left = rcBounds->left+GetResult(leftsize,m_printLevel);
 		for (pp=0;pp<CTWNDAN_MAX_COUNT;pp++)
 		{
 			if (0 == *pstuLcTwDan->SpecHuxi[pp])
 			{
 				continue;	
 			}
-			pdc->TextOut(tempRect.left+GetResult(15,m_printLevel)*pp,tempRect.top,pstuLcTwDan->SpecHuxi[pp]);
+			pTwDandc->PrintHeadData(leftsize, 14, 586, pstuLcTwDan->SpecHuxi[pp], index, pp);
 		}
 	}
 }
@@ -1463,7 +1328,7 @@ void CCLcTwDanCtrl::ShowVerticalFont(CPoint point,CString m_str,float m_printLev
 //		rcBounds.bottom = point.y+GetResult(40,m_printLevel);  // 限定宽度
 	}
 	font.DeleteObject();
-	font.CreateFont(-MulDiv(8,-pdc->GetDeviceCaps(LOGPIXELSY),72),0,0,0,FW_NORMAL,0,0,0,GB2312_CHARSET,OUT_STROKE_PRECIS,CLIP_STROKE_PRECIS,DRAFT_QUALITY,VARIABLE_PITCH|FF_SWISS,_T("宋体"));
+	font.CreateFont(MulDiv(8,pdc->GetDeviceCaps(LOGPIXELSY),72),0,0,0,FW_NORMAL,0,0,0,GB2312_CHARSET,OUT_STROKE_PRECIS,CLIP_STROKE_PRECIS,DRAFT_QUALITY,VARIABLE_PITCH|FF_SWISS,_T("宋体"));
 	oldfont=pdc->SelectObject(&font);
 	temp = rcBounds;
 	height = pdc->DrawText(m_str,temp,DT_CENTER | DT_WORDBREAK | DT_CALCRECT | DT_EDITCONTROL); // 获得文本高度
@@ -1640,17 +1505,24 @@ void CCLcTwDanCtrl::ShowTeshu(pSPECIAL	pSpecial, int indexrq, int indexsj,int in
 	CPoint m_point;
 	int m_index =0;
 	CString  szValue;
-	int		 NowDateRq = 0,NowDataSj = 0;
+	int		 NowDateRq = 0, NowDataSj = 0;
+	pSPACIAL_CTRL_INFO pSpacial_CtrlInfo = NULL;
+
 	if (NULL == pSpecial)
 	{
-		MessageBox("Special info is NULL program error!");
+		MessageBox(_T("Special info is NULL program error!"));
 		return ;
 	}
 	if(0 == pSpecial->index)
 	{
 		return ;
 	}
+	pSpacial_CtrlInfo = (pSPACIAL_CTRL_INFO)GetSpaceCtrlInfo(pSpecial->index);
 
+	if (NULL == pSpacial_CtrlInfo)
+	{
+		return;
+	}
 	m_point.x = g_CtwnDanManage.NeiBounds.left+ GetResult(3,g_CtwnDanManage.SizeLeve);// +GetResult(pSpecial->Date-1,g_CtwnDanManage.SizeLeve)*84+GetResult(pSpecial->Time,g_CtwnDanManage.SizeLeve)*14;
 	m_point.y = g_CtwnDanManage.NeiBounds.top;
 
@@ -1675,10 +1547,17 @@ void CCLcTwDanCtrl::ShowTeshu(pSPECIAL	pSpecial, int indexrq, int indexsj,int in
 		{
 			m_point.x += GetResult(14,g_CtwnDanManage.SizeLeve)*NowDataSj;
 		}
-		m_point.y += GetResult(7+110*indextime,g_CtwnDanManage.SizeLeve);
-
-		szValue.Format(_T("%s%s%s%s%s"),GetIntToTS(pSpecial->index),GetTeShu(pSpecial->Times),"时",GetTeShu(pSpecial->Second),"分");
-		ShowVerticalFont(m_point,szValue,g_CtwnDanManage.SizeLeve,2);
+		if (2 == pSpacial_CtrlInfo->bLjudge)
+		{
+			m_point.y += GetResult(358, g_CtwnDanManage.SizeLeve);
+			ShowVerticalFont(m_point, pSpacial_CtrlInfo->strtypeName, g_CtwnDanManage.SizeLeve, 1);
+		}
+		else
+		{
+			m_point.y += GetResult(7 + 110 * indextime, g_CtwnDanManage.SizeLeve);
+			szValue.Format(_T("%s%s%s%s%s"), pSpacial_CtrlInfo->strtypeName, GetTeShu(pSpecial->Times), "时", GetTeShu(pSpecial->Second), "分");
+			ShowVerticalFont(m_point, szValue, g_CtwnDanManage.SizeLeve, 2);
+		}
 	}
 }
 
@@ -1726,7 +1605,7 @@ void * CCLcTwDanCtrl::GetSpecialInfo(int inrq,int insj,int intm)
 	static int previnrq = 0;
 	pSPECIAL	pSpecial = NULL;
 	int nCtwnTotal = g_CtwnDanManage.m_ptrArray.GetSize();
-	if (inrq>nCtwnTotal)
+	if (inrq>=nCtwnTotal)
 	{
 		MessageBox("Get Special info from array,but Date is Error ");
 		goto EXIT_OK;
@@ -1825,6 +1704,10 @@ int CCLcTwDanCtrl::CheckSpecialType(int type)
 	{
 		return 0;
 	}
+	if (2 == pSpacial_CtrlInfo->bLjudge)
+	{
+		return 0;
+	}
 	pSpecial = (pSPECIAL)GetSpecialTypeInfo(type);
 	if (NULL == pSpecial )
 	{
@@ -1846,7 +1729,7 @@ void CCLcTwDanCtrl::SetSpecial(int Date,int Time)
 	if (0 >= nRetFlg )
 	{
 		pSpecialSrc = &g_CtwnDanManage.stuLcTwDan[Date].Special[Time][nRetFlg];
-		pSpecialDst = (pSPECIAL)GetSpecialInfo(g_CtwnDanManage.CurrentBeginDay+Date+1,Time,nRetFlg);
+		pSpecialDst = (pSPECIAL)GetSpecialInfo(g_CtwnDanManage.CurrentBeginDay+Date,Time,nRetFlg);
 
 		if (NULL != pSpecialDst && NULL != pSpecialSrc)
 		{
@@ -2173,16 +2056,6 @@ EXIT:
 	return m_time;
 }
 
-CString CCLcTwDanCtrl::GetIntToTS(int m_Teshu)
-{
-	pSPACIAL_CTRL_INFO pSpacial_CtrlInfo = (pSPACIAL_CTRL_INFO)GetSpaceCtrlInfo(m_Teshu);
-	
-	if (NULL != pSpacial_CtrlInfo)
-	{
-		return pSpacial_CtrlInfo->strtypeName;
-	}
-	return _T("未知");
-}
 
 CString CCLcTwDanCtrl::GetTeShu(int innum)
 {
@@ -3086,6 +2959,10 @@ void CCLcTwDanCtrl::OnMouseMove(UINT nFlags, CPoint point)
 	{
 		if (point.x>80 && point.x<668 && point.y>155 && point.y<=585)
 		{
+			if (0 == m_SetTipShow)				//不提示
+			{
+				return;
+			}
 			rq=m_Fun.OrdinateToDate(point.x);			//日期
 			m_Crect.top  = m_ScreenSize.top+135;
 			m_Crect.bottom = m_ScreenSize.bottom-128;

@@ -109,6 +109,13 @@ int CTwDanTabManag::SetSpecial(void * pVoid, int rq, int sj, int type, double m_
 		pSpecial++;
 		nRetFlg =1;
 	}
+	if (0 < pSpecial->index && type != pSpecial->index &&
+		(type == CLCTWDAN_FZHX ||
+		 type == CLCTWDAN_FZHO))
+	{
+		pSpecial++;
+		nRetFlg = 2;
+	}
 	if (sj== pSpecial->shij)
 	{
 		m_day2 = pSpecial->Times -CTwdGetValueToTime(sj)+1;

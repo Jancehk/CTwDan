@@ -23,7 +23,7 @@
 #define CTWNDAN_MAX_DAY				5	//天数长度
 #define CTWNDAN_MAX_TIME			5	//数值长度
 #define CTWNDAN_MAX_HUXI			3	//呼吸长度
-#define CTWNDAN_MAX_TESHUNUM		2	//一个三小时内可以进行几次特殊处理
+#define CTWNDAN_MAX_TESHUNUM		3	//一个三小时内可以进行几次特殊处理
 #define CTWNDAN_MAX_TESS			CTWNDAN_MAX_TIME+(3)
 
 #define CTWDAN_TIWEN_YEWO			0x01		//腋窝
@@ -42,7 +42,12 @@
 #define CLCTWDAN_FM					0x05		//分娩 
 #define CLCTWDAN_SW					0x06		//死亡 
 #define CLCTWDAN_SO					0x07		//手术结束
-#define CLCTWDAN_QJ					0x08		//请假
+#define CLCTWDAN_QJ					0x08		//请假结束
+#define CLCTWDAN_QO					0x09		//请假
+#define CLCTWDAN_ZY					0x0a		//转院
+#define CLCTWDAN_ZL					0x0b		//自动离院
+#define CLCTWDAN_FZHX				0x0c		//辅助呼吸
+#define CLCTWDAN_FZHO				0x0d		//停止辅助呼吸
 
 #define CTWDAN_DELETE_TW			0x01		//删除体温
 #define CTWDAN_DELETE_MB			0x02		//删除脉搏
@@ -130,6 +135,7 @@ typedef struct CTWDANMANAGE_T
 	CPen			penRed;					//划线红笔
 	CPen			penBule;				//划线蓝笔
 	CPen			penDot;					//划线红虚笔
+	void			*pTwDandc;
 	CDC				*pdc;
 	CRect			Bounds;
 	CRect			NeiBounds;
@@ -146,14 +152,19 @@ typedef struct CTWDANMANAGE_T
 }CTWDANMANAGE,*pCTWDANMANAGE;
 
 static SPACIAL_CTRL_INFO g_Special_Ctrl_Info[]={
-	{CLCTWDAN_RY,1,1,_T("入院|")},								//入院
-	{CLCTWDAN_CY,1,1,_T("出院|")},								//出院 
-	{CLCTWDAN_CK,0,1,_T("转入|")},								//出科 
-	{CLCTWDAN_SS,0,1,_T("手术|")},								//手术 
-	{CLCTWDAN_FM,0,1,_T("分娩|")},								//分娩 
-	{CLCTWDAN_SW,0,1,_T("死亡|")},								//死亡 
-	{CLCTWDAN_SO,0,1,_T("手术结束|")},							//手术结束
-	{CLCTWDAN_QJ,0,1,_T("请假|")},								//请假
+	{CLCTWDAN_RY,	1,	1,	_T("入院|")},								//入院
+	{CLCTWDAN_CY,	1,	1,	_T("出院|")},								//出院 
+	{CLCTWDAN_CK,	0,	1,	_T("转入|")},								//出科 
+	{CLCTWDAN_SS,	0,	1,	_T("手术|")},								//手术 
+	{CLCTWDAN_FM,	0,	1,	_T("分娩|")},								//分娩 
+	{CLCTWDAN_SW,	0,	1,	_T("死亡|")},								//死亡 
+	{CLCTWDAN_SO,	0,	1,	_T("手术结束|")},							//手术结束
+	{ CLCTWDAN_QJ,	0,	1,	_T("请假|") },								//请假
+	{ CLCTWDAN_QO,	0,	1,	_T("请假结束|") },							//请假结束
+	{ CLCTWDAN_ZY,	0,	1,	_T("转院|") },								//转院
+	{ CLCTWDAN_ZL,	0,	1,	_T("自动离院|") },							//自动离院
+	{ CLCTWDAN_FZHX, 2, 1,	_T("辅助呼吸") },							//辅助呼吸	
+	{ CLCTWDAN_FZHO, 2, 1,	_T("停止辅助") },							//停止辅助
 };
 
 class CCLcTwDanCtrl : public COleControl
@@ -307,7 +318,6 @@ private:
 	CString GetTeShu(int innum);
 	CString GetNumber(int innum, int zt);
 	void * GetSpaceCtrlInfo(int m_Teshu);
-	CString GetIntToTS(int m_Teshu);
 	void ShowTeshu(pSPECIAL	pSpecial, int indexrq, int indexsj,int indextime);
 	
 	int CmpTeshu(int inPut, int Value);

@@ -508,7 +508,7 @@ int AnalyzeString::SetSPecialValue(char **strIn, char **strOut,void *pstuLcTwDan
 		*BegPos = ';';
 	}
 	
-	if (CLCTWDAN_RY > nType || CLCTWDAN_SO < nType)
+	if (CLCTWDAN_RY > nType || CLCTWDAN_FZHO < nType)
 	{
 		nRet =-5;
 		goto END_EXIT;
